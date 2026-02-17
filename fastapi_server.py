@@ -1,6 +1,6 @@
 from typing import Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
@@ -13,3 +13,14 @@ def read_root() -> dict[str, str]:
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None) -> dict[str, int | str | None]:
     return {"item_id": item_id, "q": q}
+
+
+@app.get("/div")
+def divide_numbers(a: float, b: float) -> dict[str, float]:
+    """
+    Функция деления a / b.
+    Пример: /div?a=10&b=2
+    """
+    if b == 0:
+        raise HTTPException(status_code=400, detail="Деление на ноль невозможно")
+    return {"result": a / b}
