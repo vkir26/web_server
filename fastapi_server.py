@@ -16,11 +16,7 @@ def read_item(item_id: int, q: Union[str, None] = None) -> dict[str, int | str |
 
 
 @app.get("/div")
-def divide_numbers(a: float, b: float) -> dict[str, float]:
-    """
-    Функция деления a / b.
-    Пример: /div?a=10&b=2
-    """
+def div(a: float, b: float) -> dict[str, float]:
     if b == 0:
         raise HTTPException(status_code=400, detail="Деление на ноль невозможно")
     return {"result": a / b}
