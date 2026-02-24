@@ -30,6 +30,10 @@ def div(a: float, b: float) -> dict[str, float]:
     return {"result": a / b}
 
 
+def add(a: float, b: float) -> dict[str, float]:
+    return {"result": a + b}
+
+
 @dataclass(frozen=True, slots=True)
 class RequestTarget:
     path: str
@@ -74,12 +78,37 @@ def path_handler(request_line: RequestLine) -> bytes:
     html_message = ""
     match path:
         case "/":
-            html_message = get_response(
-                http_version=request_line.version,
-                status=HTTPStatus.OK,
-                content_type=request_line.content_type,
-                response={"Hello": "World"},
-            )
+            a = query_params.get("a")
+            b = query_params.get("b")
+            if a and b and a.isdigit() and b.isdigit():
+                result = add(a=float(query_params["a"]), b=float(query_params["b"]))
+                html_message = get_response(
+                    http_version=request_line.version,
+                    status=HTTPStatus.OK,
+                    content_type=request_line.content_type,
+                    response=result,
+                )
+            else:
+                response_body = """
+                        <html>
+                        <head>
+                        <meta charset="UTF-8">
+                        </head>
+                        <body>
+                            <h2>Сложение</h2>
+                            <form method="POST" action="/">
+                                <input type="text" size=1 name="a"> + <input type="text" size=1 name="b">
+                                <input type="submit" value="Решить">
+                            </form>
+                        </body>
+                        </html>
+                        """
+                html_message = (
+                    "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: text/html; charset=utf-8\r\n"
+                    f"Content-Length: {len(response_body.encode('utf-8'))}\r\n"
+                    "\r\n" + response_body
+                )
         case str() if path.startswith("/items/"):
             path_parts = path.strip("/").split("/")
             if len(path_parts) != 2 or not path_parts[1].isdigit():
@@ -132,8 +161,10 @@ def path_handler(request_line: RequestLine) -> bytes:
 def response_type(data: list[str]) -> ContentType:
     headers = {}
     for i in data:
-        key, value = i.split(": ", 1)
-        headers[key] = value
+        header_split = i.split(": ", 1)
+        if len(header_split) >= 2:
+            key, value = header_split
+            headers[key] = value
 
     for content in ContentType:
         accept = headers.get("Accept")
@@ -148,6 +179,8 @@ def parse_request_line(data: bytes) -> RequestLine:
     content_type = response_type(headers[1:])
     if "?" in target:
         request_target = RequestTarget(*target.split("?"))
+    elif method == "POST":
+        request_target = RequestTarget(path=target, param=headers[-1])
     else:
         request_target = RequestTarget(path=target, param="")
     request_line = RequestLine(
