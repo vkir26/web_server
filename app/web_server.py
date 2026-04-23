@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from handler import Handler, parse_request_line, RequestLine, ServerResponse
+from app.handler import Handler, parse_request_line, RequestLine, ServerResponse
 import socket
 
 

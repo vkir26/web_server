@@ -1,6 +1,6 @@
 from typing import Union
-from web_server import root
-from handler import Handler, HTTPException
+from app.web_server import root
+from app.handler import Handler, HTTPException
 
 app = Handler()
 
